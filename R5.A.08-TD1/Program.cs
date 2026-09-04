@@ -1,9 +1,18 @@
+using Microsoft.EntityFrameworkCore;
+using R5.A._08_TD1.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Connexion Entity Framework à PostgreSQL
+builder.Services.AddDbContext<R508Context>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
+// Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Learn more about configuring Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

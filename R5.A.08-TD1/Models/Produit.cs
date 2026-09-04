@@ -26,11 +26,10 @@ namespace R5.A._08_TD1.Models
 
         public int StockMax { get; set; }
 
-
         [ForeignKey(nameof(IdMarque))]
-        public Marque Marque { get; set; } = null!;
+        public Marque? Marque { get; set; }
 
         [ForeignKey(nameof(IdTypeProduit))]
-        public TypeProduit TypeProduit { get; set; } = null!;
+        public TypeProduit? TypeProduit { get; set; }
     }
 }
