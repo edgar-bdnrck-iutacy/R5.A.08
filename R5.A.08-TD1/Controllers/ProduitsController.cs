@@ -1,29 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using R5.A._08_TD1.Models;
+using R5.A._08_TD1.Repositories;
 
 [Route("api/[controller]")]
 [ApiController]
 public class ProduitsController : ControllerBase
 {
-    private readonly R508Context _context;
-    public ProduitsController(R508Context context)
+    private readonly IProduitRepository _repository;
+
+    public ProduitsController(IProduitRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
-    // GET: api/Produit
+    // GET: api/Produits
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Produit>>> GetProduit()
     {
-        return await _context.Produits.ToListAsync();
+        var produits = await _repository.GetAllAsync();
+        return Ok(produits);
     }
 
-    // GET: api/Produit/5
+    // GET: api/Produits/5
     [HttpGet("{idproduit}")]
     public async Task<ActionResult<Produit>> GetProduit(int idproduit)
     {
-        var produit = await _context.Produits.FindAsync(idproduit);
+        var produit = await _repository.GetByIdAsync(idproduit);
 
         if (produit == null)
         {
@@ -33,8 +35,7 @@ public class ProduitsController : ControllerBase
         return produit;
     }
 
-    // PUT: api/Produit/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // PUT: api/Produits/5
     [HttpPut("{idproduit}")]
     public async Task<IActionResult> PutProduit(int idproduit, Produit produit)
     {
@@ -43,56 +44,42 @@ public class ProduitsController : ControllerBase
             return BadRequest();
         }
 
-        _context.Entry(produit).State = EntityState.Modified;
+        if (!_repository.Exists(idproduit))
+        {
+            return NotFound();
+        }
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ProduitExists(idproduit))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
+        await _repository.UpdateAsync(produit);
 
         return NoContent();
     }
 
-    // POST: api/Produit
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // POST: api/Produits
     [HttpPost]
     public async Task<ActionResult<Produit>> PostProduit(Produit produit)
     {
-        _context.Produits.Add(produit);
-        await _context.SaveChangesAsync();
+        await _repository.AddAsync(produit);
 
-        return CreatedAtAction("GetProduit", new { idproduit = produit.IdProduit }, produit);
+        return CreatedAtAction(
+            nameof(GetProduit),
+            new { idproduit = produit.IdProduit },
+            produit
+        );
     }
 
-    // DELETE: api/Produit/5
+    // DELETE: api/Produits/5
     [HttpDelete("{idproduit}")]
     public async Task<IActionResult> DeleteProduit(int idproduit)
     {
-        var produit = await _context.Produits.FindAsync(idproduit);
+        var produit = await _repository.GetByIdAsync(idproduit);
+
         if (produit == null)
         {
             return NotFound();
         }
 
-        _context.Produits.Remove(produit);
-        await _context.SaveChangesAsync();
+        await _repository.DeleteAsync(idproduit);
 
         return NoContent();
-    }
-
-    private bool ProduitExists(int idproduit)
-    {
-        return _context.Produits.Any(e => e.IdProduit == idproduit);
     }
 }

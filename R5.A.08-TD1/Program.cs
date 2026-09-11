@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using R5.A._08_TD1.Models;
+using R5.A._08_TD1.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,10 @@ builder.Services.AddDbContext<R508Context>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
+
+builder.Services.AddScoped<IProduitRepository, ProduitRepository>();
+builder.Services.AddScoped<IMarqueRepository, MarqueRepository>();
+builder.Services.AddScoped<ITypeProduitRepository, TypeProduitRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers();

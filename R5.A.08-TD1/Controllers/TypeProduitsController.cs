@@ -1,29 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using R5.A._08_TD1.Models;
+using R5.A._08_TD1.Repositories;
 
 [Route("api/[controller]")]
 [ApiController]
 public class TypeProduitsController : ControllerBase
 {
-    private readonly R508Context _context;
-    public TypeProduitsController(R508Context context)
+    private readonly ITypeProduitRepository _repository;
+
+    public TypeProduitsController(ITypeProduitRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
-    // GET: api/TypeProduit
+    // GET: api/TypeProduits
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TypeProduit>>> GetTypeProduit()
     {
-        return await _context.TypesProduit.ToListAsync();
+        var types = await _repository.GetAllAsync();
+        return Ok(types);
     }
 
-    // GET: api/TypeProduit/5
+    // GET: api/TypeProduits/5
     [HttpGet("{idtypeproduit}")]
     public async Task<ActionResult<TypeProduit>> GetTypeProduit(int idtypeproduit)
     {
-        var typeproduit = await _context.TypesProduit.FindAsync(idtypeproduit);
+        var typeproduit = await _repository.GetByIdAsync(idtypeproduit);
 
         if (typeproduit == null)
         {
@@ -33,66 +35,54 @@ public class TypeProduitsController : ControllerBase
         return typeproduit;
     }
 
-    // PUT: api/TypeProduit/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // PUT: api/TypeProduits/5
     [HttpPut("{idtypeproduit}")]
-    public async Task<IActionResult> PutTypeProduit(int? idtypeproduit, TypeProduit typeproduit)
+    public async Task<IActionResult> PutTypeProduit(
+        int idtypeproduit,
+        TypeProduit typeproduit)
     {
         if (idtypeproduit != typeproduit.IdTypeProduit)
         {
             return BadRequest();
         }
 
-        _context.Entry(typeproduit).State = EntityState.Modified;
+        if (!_repository.Exists(idtypeproduit))
+        {
+            return NotFound();
+        }
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!TypeProduitExists(idtypeproduit))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
+        await _repository.UpdateAsync(typeproduit);
 
         return NoContent();
     }
 
-    // POST: api/TypeProduit
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // POST: api/TypeProduits
     [HttpPost]
-    public async Task<ActionResult<TypeProduit>> PostTypeProduit(TypeProduit typeproduit)
+    public async Task<ActionResult<TypeProduit>> PostTypeProduit(
+        TypeProduit typeproduit)
     {
-        _context.TypesProduit.Add(typeproduit);
-        await _context.SaveChangesAsync();
+        await _repository.AddAsync(typeproduit);
 
-        return CreatedAtAction("GetTypeProduit", new { idtypeproduit = typeproduit.IdTypeProduit }, typeproduit);
+        return CreatedAtAction(
+            nameof(GetTypeProduit),
+            new { idtypeproduit = typeproduit.IdTypeProduit },
+            typeproduit
+        );
     }
 
-    // DELETE: api/TypeProduit/5
+    // DELETE: api/TypeProduits/5
     [HttpDelete("{idtypeproduit}")]
-    public async Task<IActionResult> DeleteTypeProduit(int? idtypeproduit)
+    public async Task<IActionResult> DeleteTypeProduit(int idtypeproduit)
     {
-        var typeproduit = await _context.TypesProduit.FindAsync(idtypeproduit);
+        var typeproduit = await _repository.GetByIdAsync(idtypeproduit);
+
         if (typeproduit == null)
         {
             return NotFound();
         }
 
-        _context.TypesProduit.Remove(typeproduit);
-        await _context.SaveChangesAsync();
+        await _repository.DeleteAsync(idtypeproduit);
 
         return NoContent();
-    }
-
-    private bool TypeProduitExists(int? idtypeproduit)
-    {
-        return _context.TypesProduit.Any(e => e.IdTypeProduit == idtypeproduit);
     }
 }
