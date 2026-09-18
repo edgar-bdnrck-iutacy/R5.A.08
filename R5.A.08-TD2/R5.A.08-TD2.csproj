@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>R5.A._08_TD1</RootNamespace>
+    <RootNamespace>R5.A._08_TD2</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

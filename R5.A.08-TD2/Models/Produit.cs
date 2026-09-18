@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace R5.A._08_TD1.Models
+namespace R5.A._08_TD2.Models
 {
     public class Produit
     {

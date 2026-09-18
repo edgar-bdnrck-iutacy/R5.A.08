@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>R5.A._08_TD1.Tests</RootNamespace>
+    <RootNamespace>R5.A._08_TD2.Tests</RootNamespace>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\R5.A.08-TD1\R5.A.08-TD1.csproj" />
+    <ProjectReference Include="..\R5.A.08-TD2\R5.A.08-TD2.csproj" />
   </ItemGroup>
 
   <ItemGroup>

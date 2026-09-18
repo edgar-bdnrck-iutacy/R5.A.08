@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace R5.A._08_TD1.Models
+namespace R5.A._08_TD2.Models
 {
     public class R508Context : DbContext
     {

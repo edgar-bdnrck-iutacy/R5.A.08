@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Moq;
-using R5.A._08_TD1.Models;
-using R5.A._08_TD1.Repositories;
+using R5.A._08_TD2.Models;
+using R5.A._08_TD2.Repositories;
 
-namespace R5.A._08_TD1.Tests
+namespace R5.A._08_TD2.Tests
 {
     [TestClass]
     public class ProduitsControllerTests

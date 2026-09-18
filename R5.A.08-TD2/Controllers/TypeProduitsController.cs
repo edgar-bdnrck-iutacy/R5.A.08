@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using R5.A._08_TD1.Models;
-using R5.A._08_TD1.Repositories;
+using R5.A._08_TD2.Models;
+using R5.A._08_TD2.Repositories;
 
 [Route("api/[controller]")]
 [ApiController]
