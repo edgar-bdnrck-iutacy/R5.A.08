@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Moq;
+using R5.A._08_TD2.Controllers;
 using R5.A._08_TD2.Models;
-using R5.A._08_TD2.Repositories;
+using R5.A._08_TD2.Models.Repository.Interfaces;
 
 namespace R5.A._08_TD2.Tests
 {
@@ -9,12 +10,12 @@ namespace R5.A._08_TD2.Tests
     public class ProduitsControllerTests
     {
         [TestMethod]
-        public async Task GetProduit_IdInexistant_RetourneNotFound()
+        public async Task GetProduit_UnknownId_ReturnsNotFound()
         {
             var mockRepository = new Mock<IProduitRepository>();
 
             mockRepository
-                .Setup(r => r.GetByIdAsync(999))
+                .Setup(r => r.GetByIdWithDetailsAsync(999))
                 .ReturnsAsync((Produit?)null);
 
             var controller = new ProduitsController(mockRepository.Object);
@@ -25,7 +26,7 @@ namespace R5.A._08_TD2.Tests
         }
 
         [TestMethod]
-        public async Task GetProduit_IdExistant_RetourneProduit()
+        public async Task GetProduit_ExistingId_ReturnsOkResult()
         {
             var produit = new Produit
             {
@@ -38,19 +39,25 @@ namespace R5.A._08_TD2.Tests
             var mockRepository = new Mock<IProduitRepository>();
 
             mockRepository
-                .Setup(r => r.GetByIdAsync(1))
+                .Setup(r => r.GetByIdWithDetailsAsync(1))
                 .ReturnsAsync(produit);
 
             var controller = new ProduitsController(mockRepository.Object);
 
             var result = await controller.GetProduit(1);
 
-            Assert.IsNotNull(result.Value);
-            Assert.AreEqual("G502 HERO", result.Value.NomProduit);
+            var okResult = result.Result as OkObjectResult;
+
+            Assert.IsNotNull(okResult);
+
+            var returnedProduit = okResult.Value as Produit;
+
+            Assert.IsNotNull(returnedProduit);
+            Assert.AreEqual("G502 HERO", returnedProduit.NomProduit);
         }
 
         [TestMethod]
-        public async Task PostProduit_AppelleAddAsync()
+        public async Task PostProduit_CallsAddAsync()
         {
             var produit = new Produit
             {
@@ -63,7 +70,7 @@ namespace R5.A._08_TD2.Tests
 
             mockRepository
                 .Setup(r => r.AddAsync(produit))
-                .ReturnsAsync(produit);
+                .Returns(Task.CompletedTask);
 
             var controller = new ProduitsController(mockRepository.Object);
 
@@ -76,7 +83,7 @@ namespace R5.A._08_TD2.Tests
         }
 
         [TestMethod]
-        public async Task DeleteProduit_IdInexistant_RetourneNotFound()
+        public async Task DeleteProduit_UnknownId_ReturnsNotFound()
         {
             var mockRepository = new Mock<IProduitRepository>();
 

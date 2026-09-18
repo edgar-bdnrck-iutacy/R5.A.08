@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using R5.A._08_TD2.Models;
 using R5.A._08_TD2.Models.Repository.Implementations;
 using R5.A._08_TD2.Repositories;
+using System.Text.Json.Serialization;
 
 using ProductRepositoryInterface =
     R5.A._08_TD2.Models.Repository.Interfaces.IProduitRepository;
@@ -19,7 +20,11 @@ builder.Services.AddScoped<IMarqueRepository, MarqueRepository>();
 builder.Services.AddScoped<ITypeProduitRepository, TypeProduitRepository>();
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Learn more about configuring Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

@@ -1,85 +1,124 @@
 using Microsoft.AspNetCore.Mvc;
 using R5.A._08_TD2.Models;
-using R5.A._08_TD2.Repositories;
+using R5.A._08_TD2.Models.Repository.Interfaces;
 
-[Route("api/[controller]")]
-[ApiController]
-public class ProduitsController : ControllerBase
+namespace R5.A._08_TD2.Controllers
 {
-    private readonly IProduitRepository _repository;
-
-    public ProduitsController(IProduitRepository repository)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProduitsController : ControllerBase
     {
-        _repository = repository;
-    }
+        private readonly IProduitRepository _repository;
 
-    // GET: api/Produits
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Produit>>> GetProduit()
-    {
-        var produits = await _repository.GetAllAsync();
-        return Ok(produits);
-    }
-
-    // GET: api/Produits/5
-    [HttpGet("{idproduit}")]
-    public async Task<ActionResult<Produit>> GetProduit(int idproduit)
-    {
-        var produit = await _repository.GetByIdAsync(idproduit);
-
-        if (produit == null)
+        public ProduitsController(IProduitRepository repository)
         {
-            return NotFound();
+            _repository = repository;
         }
 
-        return produit;
-    }
-
-    // PUT: api/Produits/5
-    [HttpPut("{idproduit}")]
-    public async Task<IActionResult> PutProduit(int idproduit, Produit produit)
-    {
-        if (idproduit != produit.IdProduit)
+        // GET: api/Produits
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Produit>>> GetProduit()
         {
-            return BadRequest();
+            var produits = await _repository.GetAllWithDetailsAsync();
+
+            return Ok(produits);
         }
 
-        if (!_repository.Exists(idproduit))
+        // GET: api/Produits/5
+        [HttpGet("{idproduit}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Produit>> GetProduit(int idproduit)
         {
-            return NotFound();
+            var produit = await _repository.GetByIdWithDetailsAsync(idproduit);
+
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(produit);
         }
 
-        await _repository.UpdateAsync(produit);
-
-        return NoContent();
-    }
-
-    // POST: api/Produits
-    [HttpPost]
-    public async Task<ActionResult<Produit>> PostProduit(Produit produit)
-    {
-        await _repository.AddAsync(produit);
-
-        return CreatedAtAction(
-            nameof(GetProduit),
-            new { idproduit = produit.IdProduit },
-            produit
-        );
-    }
-
-    // DELETE: api/Produits/5
-    [HttpDelete("{idproduit}")]
-    public async Task<IActionResult> DeleteProduit(int idproduit)
-    {
-        var produit = await _repository.GetByIdAsync(idproduit);
-
-        if (produit == null)
+        // GET: api/Produits/brand/2
+        [HttpGet("brand/{brandId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Produit>>> GetByBrand(int brandId)
         {
-            return NotFound();
+            var produits = await _repository.GetByBrandAsync(brandId);
+
+            return Ok(produits);
         }
 
-        await _repository.DeleteAsync(idproduit);
+        // POST: api/Produits
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Produit>> PostProduit(Produit produit)
+        {
+            await _repository.AddAsync(produit);
+            await _repository.SaveAsync();
 
-        return NoContent();
+            return CreatedAtAction(
+                nameof(GetProduit),
+                new { idproduit = produit.IdProduit },
+                produit
+            );
+        }
+
+        // PUT: api/Produits/5
+        [HttpPut("{idproduit}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PutProduit(int idproduit, Produit produit)
+        {
+            if (idproduit != produit.IdProduit)
+            {
+                return BadRequest();
+            }
+
+            var existingProduit = await _repository.GetByIdAsync(idproduit);
+
+            if (existingProduit == null)
+            {
+                return NotFound();
+            }
+
+            existingProduit.NomProduit = produit.NomProduit;
+            existingProduit.Description = produit.Description;
+            existingProduit.NomPhoto = produit.NomPhoto;
+            existingProduit.UriPhoto = produit.UriPhoto;
+            existingProduit.IdTypeProduit = produit.IdTypeProduit;
+            existingProduit.IdMarque = produit.IdMarque;
+            existingProduit.StockReel = produit.StockReel;
+            existingProduit.StockMin = produit.StockMin;
+            existingProduit.StockMax = produit.StockMax;
+
+            await _repository.UpdateAsync(existingProduit);
+            await _repository.SaveAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Produits/5
+        [HttpDelete("{idproduit}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProduit(int idproduit)
+        {
+            var produit = await _repository.GetByIdAsync(idproduit);
+
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            await _repository.DeleteAsync(produit);
+            await _repository.SaveAsync();
+
+            return NoContent();
+        }
     }
 }
