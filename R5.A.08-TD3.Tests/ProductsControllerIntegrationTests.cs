@@ -1,8 +1,12 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using R5.A._08_TD3.Controllers;
+using R5.A._08_TD3.Managers;
 using R5.A._08_TD3.Models;
+using R5.A._08_TD3.Models.DTO;
 using R5.A._08_TD3.Models.Repository.Implementations;
+using R5.A._08_TD3.Profiles;
 
 namespace R5.A._08_TD3.Tests
 {
@@ -12,6 +16,7 @@ namespace R5.A._08_TD3.Tests
         private R508Context _context = null!;
         private ProductRepository _repository = null!;
         private ProduitsController _controller = null!;
+        private IMapper _mapper = null!;
 
         [TestInitialize]
         public async Task Setup()
@@ -28,7 +33,23 @@ namespace R5.A._08_TD3.Tests
             await _context.Database.EnsureCreatedAsync();
 
             _repository = new ProductRepository(_context);
-            _controller = new ProduitsController(_repository);
+
+            var mapperConfig = new MapperConfiguration(
+                cfg =>
+                {
+                    cfg.AddProfile<MappingProfile>();
+                },
+                Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance
+            );
+
+            _mapper = mapperConfig.CreateMapper();
+
+            var manager = new ProduitManager(
+                _repository,
+                _mapper
+            );
+
+            _controller = new ProduitsController(manager);
         }
 
         [TestCleanup]
@@ -68,25 +89,38 @@ namespace R5.A._08_TD3.Tests
 
             var postResult = await _controller.PostProduit(produit);
 
-            var createdResult = postResult.Result as CreatedAtActionResult;
+            var createdResult =
+                postResult.Result as CreatedAtActionResult;
 
             Assert.IsNotNull(createdResult);
             Assert.AreEqual(201, createdResult.StatusCode);
             Assert.IsTrue(produit.IdProduit > 0);
 
-            var getResult = await _controller.GetProduit(produit.IdProduit);
+            var getResult =
+                await _controller.GetProduit(produit.IdProduit);
 
-            var okResult = getResult.Result as OkObjectResult;
+            var okResult =
+                getResult.Result as OkObjectResult;
 
             Assert.IsNotNull(okResult);
             Assert.AreEqual(200, okResult.StatusCode);
 
-            var returnedProduit = okResult.Value as Produit;
+            var returnedProduit =
+                okResult.Value as ProduitDetailDto;
 
             Assert.IsNotNull(returnedProduit);
-            Assert.AreEqual("G502 HERO", returnedProduit.NomProduit);
-            Assert.AreEqual("Logitech", returnedProduit.Marque?.NomMarque);
-            Assert.AreEqual("Mouse", returnedProduit.TypeProduit?.NomTypeProduit);
+            Assert.AreEqual(
+                "G502 HERO",
+                returnedProduit.Nom
+            );
+            Assert.AreEqual(
+                "Logitech",
+                returnedProduit.Marque
+            );
+            Assert.AreEqual(
+                "Mouse",
+                returnedProduit.Type
+            );
         }
 
         [TestMethod]
@@ -137,21 +171,32 @@ namespace R5.A._08_TD3.Tests
                 updatedProduit
             );
 
-            Assert.IsInstanceOfType(putResult, typeof(NoContentResult));
+            Assert.IsInstanceOfType(
+                putResult,
+                typeof(NoContentResult)
+            );
 
-            var getResult = await _controller.GetProduit(produit.IdProduit);
+            var getResult =
+                await _controller.GetProduit(produit.IdProduit);
 
-            var okResult = getResult.Result as OkObjectResult;
+            var okResult =
+                getResult.Result as OkObjectResult;
 
             Assert.IsNotNull(okResult);
 
-            var returnedProduit = okResult.Value as Produit;
+            var returnedProduit =
+                okResult.Value as ProduitDetailDto;
 
             Assert.IsNotNull(returnedProduit);
-            Assert.AreEqual("G502 HERO Updated", returnedProduit.NomProduit);
-            Assert.AreEqual(15, returnedProduit.StockReel);
+            Assert.AreEqual(
+                "G502 HERO Updated",
+                returnedProduit.Nom
+            );
+            Assert.AreEqual(
+                15,
+                returnedProduit.Stock
+            );
         }
-
 
         [TestMethod]
         public async Task DeleteProduit_ExistingProduct_ThenGetReturnsNotFound()
@@ -184,18 +229,22 @@ namespace R5.A._08_TD3.Tests
             _context.Produits.Add(produit);
             await _context.SaveChangesAsync();
 
-            var deleteResult = await _controller.DeleteProduit(produit.IdProduit);
+            var deleteResult =
+                await _controller.DeleteProduit(produit.IdProduit);
 
-            Assert.IsInstanceOfType(deleteResult, typeof(NoContentResult));
+            Assert.IsInstanceOfType(
+                deleteResult,
+                typeof(NoContentResult)
+            );
 
-            var getResult = await _controller.GetProduit(produit.IdProduit);
+            var getResult =
+                await _controller.GetProduit(produit.IdProduit);
 
             Assert.IsInstanceOfType(
                 getResult.Result,
                 typeof(NotFoundResult)
             );
         }
-
 
         [TestMethod]
         public async Task PostProduit_InvalidBrandId_ThrowsDbUpdateException()
@@ -220,7 +269,8 @@ namespace R5.A._08_TD3.Tests
             };
 
             await Assert.ThrowsExceptionAsync<DbUpdateException>(
-                async () => await _controller.PostProduit(produit)
+                async () =>
+                    await _controller.PostProduit(produit)
             );
         }
     }

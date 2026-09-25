@@ -1,85 +1,92 @@
 using Microsoft.AspNetCore.Mvc;
+using R5.A._08_TD3.Managers;
 using R5.A._08_TD3.Models;
-using R5.A._08_TD3.Repositories;
+using R5.A._08_TD3.Models.DTO;
 
-[Route("api/[controller]")]
-[ApiController]
-public class MarquesController : ControllerBase
+namespace R5.A._08_TD3.Controllers
 {
-    private readonly IMarqueRepository _repository;
-
-    public MarquesController(IMarqueRepository repository)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class MarquesController : ControllerBase
     {
-        _repository = repository;
-    }
+        private readonly IMarqueManager _manager;
 
-    // GET: api/Marques
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Marque>>> GetMarque()
-    {
-        var marques = await _repository.GetAllAsync();
-        return Ok(marques);
-    }
-
-    // GET: api/Marques/5
-    [HttpGet("{idmarque}")]
-    public async Task<ActionResult<Marque>> GetMarque(int idmarque)
-    {
-        var marque = await _repository.GetByIdAsync(idmarque);
-
-        if (marque == null)
+        public MarquesController(IMarqueManager manager)
         {
-            return NotFound();
+            _manager = manager;
         }
 
-        return marque;
-    }
-
-    // PUT: api/Marques/5
-    [HttpPut("{idmarque}")]
-    public async Task<IActionResult> PutMarque(int idmarque, Marque marque)
-    {
-        if (idmarque != marque.IdMarque)
+        // GET: api/Marques
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<MarqueDto>>> GetMarques()
         {
-            return BadRequest();
+            var marques = await _manager.GetAllAsync();
+
+            return Ok(marques);
         }
 
-        if (!_repository.Exists(idmarque))
+        // GET: api/Marques/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<MarqueDto>> GetMarque(int id)
         {
-            return NotFound();
+            var marque = await _manager.GetByIdAsync(id);
+
+            if (marque == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(marque);
         }
 
-        await _repository.UpdateAsync(marque);
-
-        return NoContent();
-    }
-
-    // POST: api/Marques
-    [HttpPost]
-    public async Task<ActionResult<Marque>> PostMarque(Marque marque)
-    {
-        await _repository.AddAsync(marque);
-
-        return CreatedAtAction(
-            nameof(GetMarque),
-            new { idmarque = marque.IdMarque },
-            marque
-        );
-    }
-
-    // DELETE: api/Marques/5
-    [HttpDelete("{idmarque}")]
-    public async Task<IActionResult> DeleteMarque(int idmarque)
-    {
-        var marque = await _repository.GetByIdAsync(idmarque);
-
-        if (marque == null)
+        // PUT: api/Marques/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutMarque(
+            int id,
+            Marque marque)
         {
-            return NotFound();
+            if (id != marque.IdMarque)
+            {
+                return BadRequest();
+            }
+
+            if (!_manager.Exists(id))
+            {
+                return NotFound();
+            }
+
+            await _manager.UpdateAsync(marque);
+
+            return NoContent();
         }
 
-        await _repository.DeleteAsync(idmarque);
+        // POST: api/Marques
+        [HttpPost]
+        public async Task<ActionResult<Marque>> PostMarque(
+            Marque marque)
+        {
+            var createdMarque =
+                await _manager.AddAsync(marque);
 
-        return NoContent();
+            return CreatedAtAction(
+                nameof(GetMarque),
+                new { id = createdMarque.IdMarque },
+                createdMarque
+            );
+        }
+
+        // DELETE: api/Marques/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMarque(int id)
+        {
+            if (!_manager.Exists(id))
+            {
+                return NotFound();
+            }
+
+            await _manager.DeleteAsync(id);
+
+            return NoContent();
+        }
     }
 }

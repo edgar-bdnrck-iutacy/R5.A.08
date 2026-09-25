@@ -3,6 +3,7 @@ using R5.A._08_TD3.Models;
 using R5.A._08_TD3.Models.Repository.Implementations;
 using R5.A._08_TD3.Repositories;
 using System.Text.Json.Serialization;
+using R5.A._08_TD3.Managers;
 
 using ProductRepositoryInterface =
     R5.A._08_TD3.Models.Repository.Interfaces.IProduitRepository;
@@ -15,15 +16,27 @@ builder.Services.AddDbContext<R508Context>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
+// Repositories
 builder.Services.AddScoped<ProductRepositoryInterface, ProductRepository>();
 builder.Services.AddScoped<IMarqueRepository, MarqueRepository>();
 builder.Services.AddScoped<ITypeProduitRepository, TypeProduitRepository>();
+
+// Managers
+builder.Services.AddScoped<IProduitManager, ProduitManager>();
+builder.Services.AddScoped<IMarqueManager, MarqueManager>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<R5.A._08_TD3.Profiles.MappingProfile>();
+});
 
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler =
+            ReferenceHandler.IgnoreCycles;
     });
 
 // Learn more about configuring Swagger/OpenAPI

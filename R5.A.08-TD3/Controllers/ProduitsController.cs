@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using R5.A._08_TD3.Managers;
 using R5.A._08_TD3.Models;
-using R5.A._08_TD3.Models.Repository.Interfaces;
+using R5.A._08_TD3.Models.DTO;
 
 namespace R5.A._08_TD3.Controllers
 {
@@ -8,19 +9,19 @@ namespace R5.A._08_TD3.Controllers
     [ApiController]
     public class ProduitsController : ControllerBase
     {
-        private readonly IProduitRepository _repository;
+        private readonly IProduitManager _manager;
 
-        public ProduitsController(IProduitRepository repository)
+        public ProduitsController(IProduitManager manager)
         {
-            _repository = repository;
+            _manager = manager;
         }
 
         // GET: api/Produits
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Produit>>> GetProduit()
+        public async Task<ActionResult<IEnumerable<ProduitDto>>> GetProduit()
         {
-            var produits = await _repository.GetAllWithDetailsAsync();
+            var produits = await _manager.GetAllAsync();
 
             return Ok(produits);
         }
@@ -29,9 +30,9 @@ namespace R5.A._08_TD3.Controllers
         [HttpGet("{idproduit}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Produit>> GetProduit(int idproduit)
+        public async Task<ActionResult<ProduitDetailDto>> GetProduit(int idproduit)
         {
-            var produit = await _repository.GetByIdWithDetailsAsync(idproduit);
+            var produit = await _manager.GetByIdAsync(idproduit);
 
             if (produit == null)
             {
@@ -44,9 +45,9 @@ namespace R5.A._08_TD3.Controllers
         // GET: api/Produits/brand/2
         [HttpGet("brand/{brandId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Produit>>> GetByBrand(int brandId)
+        public async Task<ActionResult<IEnumerable<ProduitDto>>> GetByBrand(int brandId)
         {
-            var produits = await _repository.GetByBrandAsync(brandId);
+            var produits = await _manager.GetByBrandAsync(brandId);
 
             return Ok(produits);
         }
@@ -57,8 +58,8 @@ namespace R5.A._08_TD3.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Produit>> PostProduit(Produit produit)
         {
-            await _repository.AddAsync(produit);
-            await _repository.SaveAsync();
+            await _manager.AddAsync(produit);
+            await _manager.SaveAsync();
 
             return CreatedAtAction(
                 nameof(GetProduit),
@@ -79,7 +80,7 @@ namespace R5.A._08_TD3.Controllers
                 return BadRequest();
             }
 
-            var existingProduit = await _repository.GetByIdAsync(idproduit);
+            var existingProduit = await _manager.GetEntityByIdAsync(idproduit);
 
             if (existingProduit == null)
             {
@@ -96,8 +97,8 @@ namespace R5.A._08_TD3.Controllers
             existingProduit.StockMin = produit.StockMin;
             existingProduit.StockMax = produit.StockMax;
 
-            await _repository.UpdateAsync(existingProduit);
-            await _repository.SaveAsync();
+            await _manager.UpdateAsync(existingProduit);
+            await _manager.SaveAsync();
 
             return NoContent();
         }
@@ -108,15 +109,15 @@ namespace R5.A._08_TD3.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteProduit(int idproduit)
         {
-            var produit = await _repository.GetByIdAsync(idproduit);
+            var produit = await _manager.GetEntityByIdAsync(idproduit);
 
             if (produit == null)
             {
                 return NotFound();
             }
 
-            await _repository.DeleteAsync(produit);
-            await _repository.SaveAsync();
+            await _manager.DeleteAsync(produit);
+            await _manager.SaveAsync();
 
             return NoContent();
         }

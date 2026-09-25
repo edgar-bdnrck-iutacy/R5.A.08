@@ -22,10 +22,25 @@ namespace R5.A._08_TD3.Repositories
             return await _context.Marques.FindAsync(id);
         }
 
+        public async Task<IEnumerable<Marque>> GetAllWithProductsAsync()
+        {
+            return await _context.Marques
+                .Include(m => m.Produits)
+                .ToListAsync();
+        }
+
+        public async Task<Marque?> GetByIdWithProductsAsync(int id)
+        {
+            return await _context.Marques
+                .Include(m => m.Produits)
+                .FirstOrDefaultAsync(m => m.IdMarque == id);
+        }
+
         public async Task<Marque> AddAsync(Marque marque)
         {
             _context.Marques.Add(marque);
             await _context.SaveChangesAsync();
+
             return marque;
         }
 
@@ -48,7 +63,9 @@ namespace R5.A._08_TD3.Repositories
 
         public bool Exists(int id)
         {
-            return _context.Marques.Any(m => m.IdMarque == id);
+            return _context.Marques.Any(
+                m => m.IdMarque == id
+            );
         }
     }
 }

@@ -64,6 +64,8 @@ namespace R5.A._08_TD3.Models.Repository.Implementations
         public async Task<IEnumerable<Produit>> GetByBrandAsync(int brandId)
         {
             return await _context.Produits
+                .Include(p => p.Marque)
+                .Include(p => p.TypeProduit)
                 .Where(p => p.IdMarque == brandId)
                 .ToListAsync();
         }

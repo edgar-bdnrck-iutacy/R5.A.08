@@ -1,14 +1,33 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using R5.A._08_TD3.Controllers;
+using R5.A._08_TD3.Managers;
 using R5.A._08_TD3.Models;
+using R5.A._08_TD3.Models.DTO;
 using R5.A._08_TD3.Models.Repository.Interfaces;
+using R5.A._08_TD3.Profiles;
 
 namespace R5.A._08_TD3.Tests
 {
     [TestClass]
     public class ProduitsControllerTests
     {
+        private readonly IMapper _mapper;
+
+        public ProduitsControllerTests()
+        {
+            var mapperConfig = new MapperConfiguration(
+                cfg =>
+                {
+                    cfg.AddProfile<MappingProfile>();
+                },
+                Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance
+            );
+
+            _mapper = mapperConfig.CreateMapper();
+        }
+
         [TestMethod]
         public async Task GetProduit_ExistingId_ReturnsOkResult()
         {
@@ -17,7 +36,17 @@ namespace R5.A._08_TD3.Tests
                 IdProduit = 1,
                 NomProduit = "G502 HERO",
                 IdMarque = 1,
-                IdTypeProduit = 1
+                IdTypeProduit = 1,
+                Marque = new Marque
+                {
+                    IdMarque = 1,
+                    NomMarque = "Logitech"
+                },
+                TypeProduit = new TypeProduit
+                {
+                    IdTypeProduit = 1,
+                    NomTypeProduit = "Mouse"
+                }
             };
 
             var mockRepository = new Mock<IProduitRepository>();
@@ -26,7 +55,12 @@ namespace R5.A._08_TD3.Tests
                 .Setup(r => r.GetByIdWithDetailsAsync(1))
                 .ReturnsAsync(produit);
 
-            var controller = new ProduitsController(mockRepository.Object);
+            var manager = new ProduitManager(
+                mockRepository.Object,
+                _mapper
+            );
+
+            var controller = new ProduitsController(manager);
 
             var result = await controller.GetProduit(1);
 
@@ -35,11 +69,13 @@ namespace R5.A._08_TD3.Tests
             Assert.IsNotNull(okResult);
             Assert.AreEqual(200, okResult.StatusCode);
 
-            var returnedProduit = okResult.Value as Produit;
+            var returnedProduit = okResult.Value as ProduitDetailDto;
 
             Assert.IsNotNull(returnedProduit);
-            Assert.AreEqual(produit.IdProduit, returnedProduit.IdProduit);
-            Assert.AreEqual(produit.NomProduit, returnedProduit.NomProduit);
+            Assert.AreEqual(produit.IdProduit, returnedProduit.Id);
+            Assert.AreEqual(produit.NomProduit, returnedProduit.Nom);
+            Assert.AreEqual("Logitech", returnedProduit.Marque);
+            Assert.AreEqual("Mouse", returnedProduit.Type);
         }
 
         [TestMethod]
@@ -51,11 +87,19 @@ namespace R5.A._08_TD3.Tests
                 .Setup(r => r.GetByIdWithDetailsAsync(999))
                 .ReturnsAsync((Produit?)null);
 
-            var controller = new ProduitsController(mockRepository.Object);
+            var manager = new ProduitManager(
+                mockRepository.Object,
+                _mapper
+            );
+
+            var controller = new ProduitsController(manager);
 
             var result = await controller.GetProduit(999);
 
-            Assert.IsInstanceOfType(result.Result, typeof(NotFoundResult));
+            Assert.IsInstanceOfType(
+                result.Result,
+                typeof(NotFoundResult)
+            );
         }
 
         [TestMethod]
@@ -79,7 +123,12 @@ namespace R5.A._08_TD3.Tests
                 .Setup(r => r.SaveAsync())
                 .Returns(Task.CompletedTask);
 
-            var controller = new ProduitsController(mockRepository.Object);
+            var manager = new ProduitManager(
+                mockRepository.Object,
+                _mapper
+            );
+
+            var controller = new ProduitsController(manager);
 
             var result = await controller.PostProduit(produit);
 
@@ -87,7 +136,10 @@ namespace R5.A._08_TD3.Tests
 
             Assert.IsNotNull(createdResult);
             Assert.AreEqual(201, createdResult.StatusCode);
-            Assert.AreEqual(nameof(ProduitsController.GetProduit), createdResult.ActionName);
+            Assert.AreEqual(
+                nameof(ProduitsController.GetProduit),
+                createdResult.ActionName
+            );
             Assert.AreEqual(produit, createdResult.Value);
 
             mockRepository.Verify(
@@ -114,11 +166,19 @@ namespace R5.A._08_TD3.Tests
 
             var mockRepository = new Mock<IProduitRepository>();
 
-            var controller = new ProduitsController(mockRepository.Object);
+            var manager = new ProduitManager(
+                mockRepository.Object,
+                _mapper
+            );
+
+            var controller = new ProduitsController(manager);
 
             var result = await controller.PutProduit(1, produit);
 
-            Assert.IsInstanceOfType(result, typeof(BadRequestResult));
+            Assert.IsInstanceOfType(
+                result,
+                typeof(BadRequestResult)
+            );
 
             mockRepository.Verify(
                 r => r.UpdateAsync(It.IsAny<Produit>()),
@@ -156,11 +216,19 @@ namespace R5.A._08_TD3.Tests
                 .Setup(r => r.SaveAsync())
                 .Returns(Task.CompletedTask);
 
-            var controller = new ProduitsController(mockRepository.Object);
+            var manager = new ProduitManager(
+                mockRepository.Object,
+                _mapper
+            );
+
+            var controller = new ProduitsController(manager);
 
             var result = await controller.DeleteProduit(1);
 
-            Assert.IsInstanceOfType(result, typeof(NoContentResult));
+            Assert.IsInstanceOfType(
+                result,
+                typeof(NoContentResult)
+            );
 
             mockRepository.Verify(
                 r => r.DeleteAsync(produit),
