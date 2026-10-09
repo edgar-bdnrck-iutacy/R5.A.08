@@ -6,6 +6,10 @@ namespace R5.A._08_TD3.Repositories
     {
         Task<IEnumerable<TypeProduit>> GetAllAsync();
         Task<TypeProduit?> GetByIdAsync(int id);
+
+        Task<IEnumerable<TypeProduit>> GetAllWithProductsAsync();
+        Task<TypeProduit?> GetByIdWithProductsAsync(int id);
+
         Task<TypeProduit> AddAsync(TypeProduit typeProduit);
         Task UpdateAsync(TypeProduit typeProduit);
         Task DeleteAsync(int id);

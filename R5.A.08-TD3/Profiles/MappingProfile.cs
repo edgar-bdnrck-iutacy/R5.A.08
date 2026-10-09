@@ -64,6 +64,18 @@ namespace R5.A._08_TD3.Profiles
                         src.Produits != null
                             ? src.Produits.Count
                             : 0));
+
+            // TypeProduit -> TypeProduitDto
+            CreateMap<TypeProduit, TypeProduitDto>()
+                .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.IdTypeProduit))
+                .ForMember(dest => dest.Nom,
+                    opt => opt.MapFrom(src => src.NomTypeProduit))
+                .ForMember(dest => dest.NbProduits,
+                    opt => opt.MapFrom(src =>
+                        src.Produits != null
+                            ? src.Produits.Count
+                            : 0));
         }
     }
 }

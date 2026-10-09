@@ -1,88 +1,98 @@
 using Microsoft.AspNetCore.Mvc;
+using R5.A._08_TD3.Managers;
 using R5.A._08_TD3.Models;
-using R5.A._08_TD3.Repositories;
+using R5.A._08_TD3.Models.DTO;
 
-[Route("api/[controller]")]
-[ApiController]
-public class TypeProduitsController : ControllerBase
+namespace R5.A._08_TD3.Controllers
 {
-    private readonly ITypeProduitRepository _repository;
-
-    public TypeProduitsController(ITypeProduitRepository repository)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TypeProduitsController : ControllerBase
     {
-        _repository = repository;
-    }
+        private readonly ITypeProduitManager _manager;
 
-    // GET: api/TypeProduits
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<TypeProduit>>> GetTypeProduit()
-    {
-        var types = await _repository.GetAllAsync();
-        return Ok(types);
-    }
-
-    // GET: api/TypeProduits/5
-    [HttpGet("{idtypeproduit}")]
-    public async Task<ActionResult<TypeProduit>> GetTypeProduit(int idtypeproduit)
-    {
-        var typeproduit = await _repository.GetByIdAsync(idtypeproduit);
-
-        if (typeproduit == null)
+        public TypeProduitsController(ITypeProduitManager manager)
         {
-            return NotFound();
+            _manager = manager;
         }
 
-        return typeproduit;
-    }
-
-    // PUT: api/TypeProduits/5
-    [HttpPut("{idtypeproduit}")]
-    public async Task<IActionResult> PutTypeProduit(
-        int idtypeproduit,
-        TypeProduit typeproduit)
-    {
-        if (idtypeproduit != typeproduit.IdTypeProduit)
+        // GET: api/TypeProduits
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TypeProduitDto>>> GetTypeProduits()
         {
-            return BadRequest();
+            var types = await _manager.GetAllAsync();
+
+            return Ok(types);
         }
 
-        if (!_repository.Exists(idtypeproduit))
+        // GET: api/TypeProduits/5
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TypeProduitDto>> GetTypeProduit(int id)
         {
-            return NotFound();
+            var typeProduit = await _manager.GetByIdAsync(id);
+
+            if (typeProduit == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(typeProduit);
         }
 
-        await _repository.UpdateAsync(typeproduit);
-
-        return NoContent();
-    }
-
-    // POST: api/TypeProduits
-    [HttpPost]
-    public async Task<ActionResult<TypeProduit>> PostTypeProduit(
-        TypeProduit typeproduit)
-    {
-        await _repository.AddAsync(typeproduit);
-
-        return CreatedAtAction(
-            nameof(GetTypeProduit),
-            new { idtypeproduit = typeproduit.IdTypeProduit },
-            typeproduit
-        );
-    }
-
-    // DELETE: api/TypeProduits/5
-    [HttpDelete("{idtypeproduit}")]
-    public async Task<IActionResult> DeleteTypeProduit(int idtypeproduit)
-    {
-        var typeproduit = await _repository.GetByIdAsync(idtypeproduit);
-
-        if (typeproduit == null)
+        // POST: api/TypeProduits
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<TypeProduit>> PostTypeProduit(TypeProduit typeProduit)
         {
-            return NotFound();
+            var created = await _manager.AddAsync(typeProduit);
+
+            return CreatedAtAction(
+                nameof(GetTypeProduit),
+                new { id = created.IdTypeProduit },
+                created
+            );
         }
 
-        await _repository.DeleteAsync(idtypeproduit);
+        // PUT: api/TypeProduits/5
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PutTypeProduit(int id, TypeProduit typeProduit)
+        {
+            if (id != typeProduit.IdTypeProduit)
+            {
+                return BadRequest();
+            }
 
-        return NoContent();
+            if (!_manager.Exists(id))
+            {
+                return NotFound();
+            }
+
+            await _manager.UpdateAsync(typeProduit);
+
+            return NoContent();
+        }
+
+        // DELETE: api/TypeProduits/5
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteTypeProduit(int id)
+        {
+            if (!_manager.Exists(id))
+            {
+                return NotFound();
+            }
+
+            await _manager.DeleteAsync(id);
+
+            return NoContent();
+        }
     }
 }

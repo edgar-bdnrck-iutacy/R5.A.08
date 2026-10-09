@@ -24,6 +24,7 @@ builder.Services.AddScoped<ITypeProduitRepository, TypeProduitRepository>();
 // Managers
 builder.Services.AddScoped<IProduitManager, ProduitManager>();
 builder.Services.AddScoped<IMarqueManager, MarqueManager>();
+builder.Services.AddScoped<ITypeProduitManager, TypeProduitManager>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(cfg =>

@@ -50,5 +50,19 @@ namespace R5.A._08_TD3.Repositories
         {
             return _context.TypesProduit.Any(t => t.IdTypeProduit == id);
         }
+
+        public async Task<IEnumerable<TypeProduit>> GetAllWithProductsAsync()
+        {
+            return await _context.TypesProduit
+                .Include(t => t.Produits)
+                .ToListAsync();
+        }
+
+        public async Task<TypeProduit?> GetByIdWithProductsAsync(int id)
+        {
+            return await _context.TypesProduit
+                .Include(t => t.Produits)
+                .FirstOrDefaultAsync(t => t.IdTypeProduit == id);
+        }
     }
 }   
