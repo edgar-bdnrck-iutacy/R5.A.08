@@ -1,0 +1,106 @@
+﻿@page "/weather"
+@using R5.A._08_TD4_Blazor.Models
+@using R5.A._08_TD4_Blazor.Services
+@inject IService ProduitService
+
+<PageTitle>Catalogue des produits</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>Catalogue des produits</h1>
+        <p class="text-muted">
+            Gestion des produits depuis notre API ASP.NET Core.
+        </p>
+    </div>
+
+    <a class="btn btn-primary" href="/produits/creer">
+        <i class="bi bi-plus-circle"></i>
+        Nouveau produit
+    </a>
+</div>
+
+@if (!string.IsNullOrEmpty(erreur))
+{
+    <div class="alert alert-danger">@erreur</div>
+}
+else if (chargement)
+{
+    <div class="d-flex align-items-center gap-2">
+        <div class="spinner-border spinner-border-sm"></div>
+        <span>Chargement des produits...</span>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <Grid TItem="ProduitDto"
+                  Data="produits"
+                  Class="table table-hover table-striped"
+                  AllowSorting="true"
+                  AllowPaging="true"
+                  PageSize="10"
+                  Responsive="true"
+                  EmptyText="Aucun produit disponible.">
+
+                <GridColumns>
+                    <GridColumn TItem="ProduitDto"
+                                HeaderText="ID"
+                                SortKeySelector="p => p.Id">
+                        @context.Id
+                    </GridColumn>
+
+                    <GridColumn TItem="ProduitDto"
+                                HeaderText="Nom"
+                                SortKeySelector="p => p.Nom">
+                        @context.Nom
+                    </GridColumn>
+
+                    <GridColumn TItem="ProduitDto"
+                                HeaderText="Type"
+                                SortKeySelector="p => p.Type">
+                        @context.Type
+                    </GridColumn>
+
+                    <GridColumn TItem="ProduitDto"
+                                HeaderText="Marque"
+                                SortKeySelector="p => p.Marque">
+                        @context.Marque
+                    </GridColumn>
+
+                    <GridColumn TItem="ProduitDto"
+                                HeaderText="Actions"
+                                Sortable="false">
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="@($"/produits/modifier/{context.Id}")">
+                            <i class="bi bi-pencil-square"></i>
+                            Modifier
+                        </a>
+                    </GridColumn>
+                </GridColumns>
+            </Grid>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProduitDto> produits = new();
+    private bool chargement = true;
+    private string? erreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            produits = await ProduitService.GetProduitsAsync();
+        }
+        catch (Exception ex)
+        {
+            erreur = "Impossible de charger les produits : " + ex.Message;
+        }
+        finally
+        {
+            chargement = false;
+        }
+    }
+}

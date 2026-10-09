@@ -10,6 +10,18 @@ using ProductRepositoryInterface =
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorClient", policy =>
+    {
+        policy.WithOrigins("https://localhost:7290")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 // Entity Framework connection to PostgreSQL
 builder.Services.AddDbContext<R508Context>(options =>
     options.UseNpgsql(
@@ -54,6 +66,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("BlazorClient");
 
 app.UseAuthorization();
 

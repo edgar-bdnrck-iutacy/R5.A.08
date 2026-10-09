@@ -52,6 +52,34 @@ namespace R5.A._08_TD3.Controllers
             return Ok(produits);
         }
 
+        // GET: api/Produits/2/edit
+        [HttpGet("{idproduit}/edit")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Produit>> GetProduitForEdit(int idproduit)
+        {
+            var produit = await _manager.GetEntityByIdAsync(idproduit);
+
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new Produit
+            {
+                IdProduit = produit.IdProduit,
+                NomProduit = produit.NomProduit,
+                Description = produit.Description,
+                NomPhoto = produit.NomPhoto,
+                UriPhoto = produit.UriPhoto,
+                IdTypeProduit = produit.IdTypeProduit,
+                IdMarque = produit.IdMarque,
+                StockReel = produit.StockReel,
+                StockMin = produit.StockMin,
+                StockMax = produit.StockMax
+            });
+        }
+
         // POST: api/Produits
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]

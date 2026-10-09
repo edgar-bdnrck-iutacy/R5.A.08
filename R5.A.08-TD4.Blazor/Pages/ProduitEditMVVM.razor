@@ -1,0 +1,147 @@
+﻿@page "/produits/mvvm/modifier/{Id:int}"
+@using R5.A._08_TD4_Blazor.ViewModels
+@inject ProduitFormViewModel ViewModel
+@implements IDisposable
+
+<PageTitle>Modifier un produit — MVVM</PageTitle>
+
+<h1>Modifier un produit — MVVM</h1>
+
+@if (!string.IsNullOrEmpty(ViewModel.Erreur))
+{
+    <div class="alert alert-danger">@ViewModel.Erreur</div>
+}
+
+@if (!string.IsNullOrEmpty(ViewModel.Succes))
+{
+    <div class="alert alert-success">@ViewModel.Succes</div>
+}
+
+@if (ViewModel.Chargement)
+{
+    <p>Chargement du produit...</p>
+}
+else if (produitTrouve)
+{
+    <EditForm @key="ViewModel.Produit"
+              Model="@ViewModel.Produit"
+              OnValidSubmit="ModifierProduit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nom du produit</label>
+            <InputText class="form-control"
+                       @bind-Value="ViewModel.Produit.NomProduit" />
+            <ValidationMessage For="@(() => ViewModel.Produit.NomProduit)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="ViewModel.Produit.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Marque</label>
+            <InputSelect class="form-select"
+                         @bind-Value="ViewModel.Produit.IdMarque">
+                <option value="0">Sélectionner une marque</option>
+                @foreach (var marque in ViewModel.Marques)
+                {
+                    <option value="@marque.Id">@marque.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => ViewModel.Produit.IdMarque)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Type de produit</label>
+            <InputSelect class="form-select"
+                         @bind-Value="ViewModel.Produit.IdTypeProduit">
+                <option value="0">Sélectionner un type</option>
+                @foreach (var type in ViewModel.TypesProduits)
+                {
+                    <option value="@type.Id">@type.Nom</option>
+                }
+        </InputSelect>
+        <ValidationMessage For="@(() => ViewModel.Produit.IdTypeProduit)" />
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock réel</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockReel" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockReel)" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock minimum</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockMin" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockMin)" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock maximum</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockMax" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockMax)" />
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@ViewModel.ModifierCommand.IsRunning">
+            @(ViewModel.ModifierCommand.IsRunning
+                        ? "Enregistrement..."
+                        : "Enregistrer")
+        </button>
+
+            <a href="/produits/mvvm" class="btn btn-secondary">
+                Retour aux produits
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private bool produitTrouve;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.PropertyChanged += OnViewModelChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        produitTrouve = false;
+
+        await ViewModel.ChargerReferencesCommand.ExecuteAsync(null);
+        await ViewModel.ChargerProduitCommand.ExecuteAsync(Id);
+
+        produitTrouve = ViewModel.Produit.IdProduit == Id;
+    }
+
+    private async Task ModifierProduit()
+    {
+        await ViewModel.ModifierCommand.ExecuteAsync(null);
+    }
+
+    private void OnViewModelChanged(
+        object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= OnViewModelChanged;
+    }
+}

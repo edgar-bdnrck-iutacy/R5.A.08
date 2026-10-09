@@ -1,0 +1,136 @@
+﻿@page "/produits/mvvm/creer"
+@using R5.A._08_TD4_Blazor.ViewModels
+@inject ProduitFormViewModel ViewModel
+@implements IDisposable
+
+<PageTitle>Créer un produit — MVVM</PageTitle>
+
+<h1>Créer un produit — MVVM</h1>
+
+<p>Création d'un produit avec CommunityToolkit.Mvvm.</p>
+
+@if (!string.IsNullOrEmpty(ViewModel.Erreur))
+{
+    <div class="alert alert-danger">@ViewModel.Erreur</div>
+}
+
+@if (!string.IsNullOrEmpty(ViewModel.Succes))
+{
+    <div class="alert alert-success">@ViewModel.Succes</div>
+}
+
+@if (ViewModel.Chargement)
+{
+    <p>Chargement des marques et des types...</p>
+}
+else
+{
+    <EditForm @key="ViewModel.Produit"
+              Model="@ViewModel.Produit"
+              OnValidSubmit="CreerProduit">
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nom du produit</label>
+            <InputText class="form-control"
+                       @bind-Value="ViewModel.Produit.NomProduit" />
+            <ValidationMessage For="@(() => ViewModel.Produit.NomProduit)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="ViewModel.Produit.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Marque</label>
+            <InputSelect class="form-select"
+                         @bind-Value="ViewModel.Produit.IdMarque">
+                <option value="0">Sélectionner une marque</option>
+                @foreach (var marque in ViewModel.Marques)
+                {
+                    <option value="@marque.Id">@marque.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => ViewModel.Produit.IdMarque)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Type de produit</label>
+            <InputSelect class="form-select"
+                         @bind-Value="ViewModel.Produit.IdTypeProduit">
+                <option value="0">Sélectionner un type</option>
+                @foreach (var type in ViewModel.TypesProduits)
+                {
+                    <option value="@type.Id">@type.Nom</option>
+                }
+        </InputSelect>
+        <ValidationMessage For="@(() => ViewModel.Produit.IdTypeProduit)" />
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock réel</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockReel" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockReel)" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock minimum</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockMin" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockMin)" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock maximum</label>
+            <InputNumber class="form-control"
+                         @bind-Value="ViewModel.Produit.StockMax" />
+            <ValidationMessage For="@(() => ViewModel.Produit.StockMax)" />
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@ViewModel.CreerCommand.IsRunning">
+            @(ViewModel.CreerCommand.IsRunning
+                        ? "Enregistrement..."
+                        : "Créer le produit")
+        </button>
+
+            <a class="btn btn-secondary" href="/produits/mvvm">
+                Retour aux produits
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.PropertyChanged += OnViewModelChanged;
+        await ViewModel.ChargerReferencesCommand.ExecuteAsync(null);
+    }
+
+    private async Task CreerProduit()
+    {
+        await ViewModel.CreerCommand.ExecuteAsync(null);
+    }
+
+    private void OnViewModelChanged(
+        object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= OnViewModelChanged;
+    }
+}

@@ -1,0 +1,184 @@
+﻿@page "/produits/modifier/{Id:int}"
+@using R5.A._08_TD4_Blazor.Models
+@using R5.A._08_TD4_Blazor.Services
+@inject IService ProduitService
+@inject NavigationManager Navigation
+@inject ToastService ToastService
+
+<PageTitle>Modifier un produit</PageTitle>
+
+<h1>Modifier un produit</h1>
+
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger">@messageErreur</div>
+}
+
+@if (!string.IsNullOrEmpty(messageSucces))
+{
+    <div class="alert alert-success">@messageSucces</div>
+}
+
+@if (chargement)
+{
+    <p>Chargement du produit...</p>
+}
+else if (produit == null)
+{
+    <p>Le produit demandé est introuvable.</p>
+}
+else
+{
+    <EditForm Model="@produit" OnValidSubmit="Enregistrer"
+              FormName="modificationProduit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nom du produit</label>
+            <InputText class="form-control"
+                       @bind-Value="produit.NomProduit" />
+            <ValidationMessage For="@(() => produit.NomProduit)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="produit.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Marque</label>
+            <InputSelect class="form-select"
+                         @bind-Value="produit.IdMarque">
+                <option value="0">Sélectionner une marque</option>
+                @foreach (var marque in marques)
+                {
+                    <option value="@marque.Id">@marque.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => produit.IdMarque)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Type de produit</label>
+            <InputSelect class="form-select"
+                         @bind-Value="produit.IdTypeProduit">
+                <option value="0">Sélectionner un type</option>
+                @foreach (var type in typesProduits)
+                {
+                    <option value="@type.Id">@type.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => produit.IdTypeProduit)" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock réel</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockReel" />
+                <ValidationMessage For="@(() => produit.StockReel)" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock minimum</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockMin" />
+                <ValidationMessage For="@(() => produit.StockMin)" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock maximum</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockMax" />
+                <ValidationMessage For="@(() => produit.StockMax)" />
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit"
+                    disabled="@enregistrement">
+                @(enregistrement ? "Enregistrement..." : "Enregistrer")
+            </button>
+
+            <a class="btn btn-secondary" href="/weather">
+                Retour aux produits
+            </a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Produit? produit;
+    private List<MarqueDto> marques = new();
+    private List<TypeProduitDto> typesProduits = new();
+
+    private bool chargement = true;
+    private bool enregistrement;
+    private string? messageErreur;
+    private string? messageSucces;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        chargement = true;
+        produit = null;
+        messageErreur = null;
+        messageSucces = null;
+
+        try
+        {
+            produit = await ProduitService.GetProduitAsync(Id);
+            marques = await ProduitService.GetMarquesAsync();
+            typesProduits = await ProduitService.GetTypesProduitsAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = "Erreur de chargement : " + ex.Message;
+        }
+        finally
+        {
+            chargement = false;
+        }
+    }
+
+    private async Task Enregistrer()
+    {
+        if (produit == null)
+            return;
+
+        enregistrement = true;
+        messageErreur = null;
+        messageSucces = null;
+
+        try
+        {
+            bool reussi = await ProduitService.UpdateProduitAsync(
+                Id, produit);
+
+            if (reussi)
+            {
+                messageSucces = "Produit modifié avec succès.";
+
+                ToastService.Notify(
+                    new(ToastType.Success, "Produit modifié avec succès."));
+            }
+            else
+            {
+                messageErreur = "Le produit n'existe plus.";
+
+                ToastService.Notify(
+                    new(ToastType.Danger, "Impossible de modifier le produit."));
+            }
+        }
+        catch (Exception ex)
+        {
+            messageErreur = "Erreur de modification : " + ex.Message;
+        }
+        finally
+        {
+            enregistrement = false;
+        }
+    }
+}

@@ -1,0 +1,171 @@
+﻿@page "/produits/creer"
+@using R5.A._08_TD4_Blazor.Models
+@using R5.A._08_TD4_Blazor.Services
+@inject IService ProduitService
+@inject ToastService ToastService
+
+<PageTitle>Créer un produit</PageTitle>
+
+<h1>Créer un produit</h1>
+
+<p>Ajouter un nouveau produit au catalogue.</p>
+
+@if (!string.IsNullOrEmpty(messageSucces))
+{
+    <div class="alert alert-success">
+        @messageSucces
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger">
+        @messageErreur
+    </div>
+}
+
+@if (chargement)
+{
+    <p>Chargement des marques et des types...</p>
+}
+else
+{
+    <EditForm Model="@produit"
+              OnValidSubmit="@CreerProduit"
+              FormName="creationProduit">
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nom du produit</label>
+            <InputText class="form-control"
+                       @bind-Value="produit.NomProduit" />
+            <ValidationMessage For="@(() => produit.NomProduit)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="produit.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Marque</label>
+            <InputSelect class="form-select"
+                         @bind-Value="produit.IdMarque">
+                <option value="0">Sélectionner une marque</option>
+                @foreach (var marque in marques)
+                {
+                    <option value="@marque.Id">@marque.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => produit.IdMarque)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Type de produit</label>
+            <InputSelect class="form-select"
+                         @bind-Value="produit.IdTypeProduit">
+                <option value="0">Sélectionner un type</option>
+                @foreach (var type in typesProduits)
+                {
+                    <option value="@type.Id">@type.Nom</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => produit.IdTypeProduit)" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock réel</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockReel" />
+                <ValidationMessage For="@(() => produit.StockReel)" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock minimum</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockMin" />
+                <ValidationMessage For="@(() => produit.StockMin)" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Stock maximum</label>
+                <InputNumber class="form-control"
+                             @bind-Value="produit.StockMax" />
+                <ValidationMessage For="@(() => produit.StockMax)" />
+            </div>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@enregistrement">
+            @(enregistrement ? "Enregistrement..." : "Créer le produit")
+        </button>
+    </EditForm>
+}
+
+@code {
+    private Produit produit = new();
+    private List<MarqueDto> marques = new();
+    private List<TypeProduitDto> typesProduits = new();
+
+    private bool chargement = true;
+    private bool enregistrement = false;
+
+    private string? messageSucces;
+    private string? messageErreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            marques = await ProduitService.GetMarquesAsync();
+            typesProduits = await ProduitService.GetTypesProduitsAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = "Impossible de charger les données : " + ex.Message;
+        }
+        finally
+        {
+            chargement = false;
+        }
+    }
+
+    private async Task CreerProduit()
+    {
+        enregistrement = true;
+        messageSucces = null;
+        messageErreur = null;
+
+        try
+        {
+            var resultat = await ProduitService.CreateProduitAsync(produit);
+
+            if (resultat != null)
+            {
+                messageSucces = $"Le produit « {resultat.NomProduit} » a été créé avec succès.";
+                produit = new Produit();
+
+                ToastService.Notify(
+                    new(ToastType.Success, "Le produit a été créé avec succès."));
+            }
+        }
+        catch (Exception ex)
+        {
+            messageErreur = "Erreur lors de la création : " + ex.Message;
+
+            ToastService.Notify(
+                new(ToastType.Danger, "Impossible de créer le produit."));
+        }
+        finally
+        {
+            enregistrement = false;
+        }
+    }
+}
+
+
