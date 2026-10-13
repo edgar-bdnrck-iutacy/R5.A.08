@@ -74,5 +74,15 @@ namespace R5.A._08_TD4_Blazor.Services
                 ?? new List<TypeProduitDto>();
         }
 
+        public async Task<List<ProduitDto>> GetProduitsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return await _httpClient
+                .GetFromJsonAsync<List<ProduitDto>>(
+                    "api/Produits",
+                    cancellationToken)
+                ?? new List<ProduitDto>();
+        }
+
     }
 }

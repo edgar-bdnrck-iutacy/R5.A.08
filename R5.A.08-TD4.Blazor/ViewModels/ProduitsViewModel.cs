@@ -31,15 +31,18 @@ namespace R5.A._08_TD4_Blazor.ViewModels
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var resultat = await _service.GetProduitsAsync();
+                // Le token est transmis à la requête HTTP.
+                var resultat = await _service.GetProduitsAsync(
+                    cancellationToken);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 Produits = resultat;
             }
             catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
             {
-                // L'annulation est volontaire.
+                // Annulation volontaire : aucune erreur à afficher.
             }
             catch (Exception ex)
             {
